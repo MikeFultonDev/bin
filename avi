@@ -11,7 +11,7 @@ fi
 /bin/vi $*
 rc=$?
 
-if [ $# -eq 1 ]; then
+if [ $# -eq 1 ] && [ -f "$1" ]; then
 	size=$(ls -s1 "$1" | awk '{print $1}')
 	if [ $size -eq 0 ]; then
 		rm "$1"
