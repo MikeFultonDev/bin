@@ -1,0 +1,19 @@
+#!/bin/sh
+set -e
+
+echo "you sure you want to kill all other processes on your account? (y/n)"
+read ans
+if [ "${ans}" != 'y' ]; then
+  echo 'ok - nothing done'
+  exit 0
+fi
+
+MYTTY=$(tty)
+MYTTY=${MYTTY##*/}
+
+pslist=$(ps -ef | tail +2 | awk -v MYTTY=${MYTTY} ' { if ($6!=MYTTY && $6!="?") { print $2; }}')
+
+set +e # some processes may not exist after processes are killed
+for ps in ${pslist}; do
+  echo "kill -9 ${ps} 2>/dev/null"
+done
