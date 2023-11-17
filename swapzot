@@ -1,61 +1,1 @@
-#!/bin/sh
-
-#
-# swapzot: update the symbolic link to point to the 'other' directory (e.g. move from locala to localb or localb to locala)
-#
-
-ZFSINSTID='zfsinst'
-CALLERHOME=$HOME
-ZOTROOT="/zot"
-
-if ! sudo -v ; then
-  echo 'Error: You need to be authorized to sudo to run this program' >&2
-  exit 4
-fi
-sudolist=$(sudo -l)
-if [ $? -gt 0 ]; then
-  echo 'Error: You need to be able to list commands you are authorized to sudo' >&2
-  exit 4
-fi
-
-#
-# Make sure the 2 'ln' sudo commands are available
-#
-err=false
-if ! echo "${sudolist}" | grep -q "(${ZFSINSTID}) NOPASSWD: /bin/ln -fs ${ZOTROOT}/locala ${ZOTROOT}/local" ; then
-  echo "Error: You need to be able to sudo -u ${ZFSINSTID} /bin/ln -fs ${ZOTROOT}/locala ${ZOTROOT}/local" >&2
-  err=true
-fi
-if ! echo "${sudolist}" | grep -q "(${ZFSINSTID}) NOPASSWD: /bin/ln -fs ${ZOTROOT}/localb ${ZOTROOT}/local" ; then
-  echo "Error: You need to be able to sudo -u ${ZFSINSTID} /bin/ln -fs ${ZOTROOT}/localb ${ZOTROOT}/local" >&2
-  err=true
-fi
-
-if $err; then
-  echo "Error: use visudo to add this privilege or run as a different user than $CALLERHOME" >&2
-  exit 4
-fi
-
-#
-# Determine target directory to link to. This is the one _not_ currently linked from $ZOTROOT/local
-#
-if ! target=$(cd $ZOTROOT/local 2>/dev/null && echo $PWD) ; then
-  echo "Error: Unable to determine $ZOTROOT/local directory. Configuration is invalid." >&2
-  exit 4
-fi
-
-if [ "x${target}" = "x${ZOTROOT}/locala" ]; then
-  lntgt="${ZOTROOT}/localb"
-elif [ "x${target}" = "x${ZOTROOT}/localb" ]; then
-  lntgt="${ZOTROOT}/locala"
-else
-  echo "Error: symbolic link for ${ZOTROOT}/local does not point to ${ZOTROOT}/locala nor ${ZOTROOT}/localb" >&2
-  exit 4
-fi
-
-if ! sudo -u ${ZFSINSTID} /bin/ln -fs "${lntgt}" "${ZOTROOT}/local" ; then
-  echo "Error: 'sudo -u ${ZFSINSTID} /bin/ln -fs ${lntgt} ${ZOTROOT}/local' failed. This is not expected." >&2
-  exit 4
-fi
-
-exit 0
+{Zaa¢{{@¢¦©£z@¤£@£@¢¨@@£@£@£@£@}£}@£¨@MKK@¥@@@£@@@@£@]{éÆâÉÕâãÉÄ~}©¢¢£}ÃÁÓÓÅÙÈÖÔÅ~[ÈÖÔÅéÖãÙÖÖã~a©@Z@¢¤@`¥@^@£@@@}Åz@è¤@@£@@¤£©@£@¢¤@£@¤@£¢@}@nPò@@§£@ô¢¤¢£~[M¢¤@`]@­@[o@`£@ð@½^@£@@@}Åz@è¤@@£@@@£@¢£@¢@¨¤@@¤£©@£@¢¤}@nPò@@§£@ô{{@Ô@¢¤@£@ò@}}@¢¤@¢@@¥{~¢@Z@@[À¢¤¢£Ð@O@@`@M[ÀéÆâÉÕâãÉÄÐ]@ÕÖ×ÁââæÄz@aa@`¢@[ÀéÖãÙÖÖãÐa@[ÀéÖãÙÖÖãÐa@^@£@@@Åz@è¤@@£@@@£@¢¤@`¤@[ÀéÆâÉÕâãÉÄÐ@aa@`¢@[ÀéÖãÙÖÖãÐa@[ÀéÖãÙÖÖãÐa@nPò@@~£¤@Z@@[À¢¤¢£Ð@O@@`@M[ÀéÆâÉÕâãÉÄÐ]@ÕÖ×ÁââæÄz@aa@`¢@[ÀéÖãÙÖÖãÐa@[ÀéÖãÙÖÖãÐa@^@£@@@Åz@è¤@@£@@@£@¢¤@`¤@[ÀéÆâÉÕâãÉÄÐ@aa@`¢@[ÀéÖãÙÖÖãÐa@[ÀéÖãÙÖÖãÐa@nPò@@~£¤@[^@£@@@Åz@¤¢@¥¢¤@£@@£¢@¥@@¤@¢@@£@¤¢@£@[ÃÁÓÓÅÙÈÖÔÅ@nPò@@§£@ô{{@Ä£@££@£¨@£@@£K@ã¢@¢@£@@m£m@¤£¨@@@[éÖãÙÖÖãa{@Z@££~[M@[éÖãÙÖÖãa@òna¥a¤@PP@@[×æÄ]@^@£@@@Åz@ä@£@£@[éÖãÙÖÖãa@£¨K@Ã¤£@¢@¥K@nPò@@§£@ô@­@§[À££Ð@~@§[ÀéÖãÙÖÖãÐa@½^@£@@££~[ÀéÖãÙÖÖãÐa@­@§[À££Ð@~@§[ÀéÖãÙÖÖãÐa@½^@£@@££~[ÀéÖãÙÖÖãÐa¢@@@Åz@¢¨@@@[ÀéÖãÙÖÖãÐa@¢@£@£@£@[ÀéÖãÙÖÖãÐa@@[ÀéÖãÙÖÖãÐa@nPò@@§£@ô@Z@¢¤@`¤@[ÀéÆâÉÕâãÉÄÐ@aa@`¢@[À££Ð@[ÀéÖãÙÖÖãÐa@^@£@@@Åz@}¢¤@`¤@[ÀéÆâÉÕâãÉÄÐ@aa@`¢@[À££Ð@[ÀéÖãÙÖÖãÐa}@K@ã¢@¢@£@§£K@nPò@@§£@ô§£@ð
