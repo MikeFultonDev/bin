@@ -1,5 +1,4 @@
 #!/bin/sh
-
 #
 # cpzot: copy from callers file system to inactive directory
 #
