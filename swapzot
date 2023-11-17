@@ -1,5 +1,4 @@
 #!/bin/sh
-
 #
 # swapzot: update the symbolic link to point to the 'other' directory (e.g. move from locala to localb or localb to locala)
 #

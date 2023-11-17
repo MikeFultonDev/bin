@@ -1,5 +1,4 @@
 #!/bin/sh
-
 #
 # upgradezot: upgrades the z/OS Open Tools from the callers $HOME/zot directory
 #   by performing the following steps (on a production system, this would be done manually)
