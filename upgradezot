@@ -1,1 +1,64 @@
-{Zaa¢{{@¤©£z@¤¢@£@©aÖâ@Ö@ã¢@@£@¢@[ÈÖÔÅa©£@£¨{@@@¨@@£@¦@¢£¢@M@@¤£@¢¨¢£k@£¢@¦¤@@@¤¨]{@{@@`¢@[éÖ×ÅÕmÙÖÖãÆâaKKa©@[ÈÖÔÅa©@@@@@{@¢£@¤@@@a©@£@@}©}@£{@©`£@`¨@[ÈÖÔÅa©@@@@@@@@@@@@@@@@@@@@@{@£@¤£@¤@£@{@¤@¢@£@@éÖ×ÅÕmÙÖãÆâ@@£@a¤¢aa©{@¤@©£@£@¨@[ÈÖÔÅa©@£@@¤£@£{@¤@¢¦©£@£@¢¦@@¤£@£@@¤£@¤@a¤¢aa©{ÔèÄÉÙ~[M@[M@[ð]@n@a¥a¤@ònPñ@PP@¦@`×]éÖãÙÖÖã~[ÀéÖ×ÅÕmÙÖÖãÆâÐaKKa©@Z@­@`@[ÀéÖ×ÅÕmÙÖÖãÆâÐ@½@OO@Z@­@`@[ÀéÖãÙÖÖãÐ@½^@£@@@Åz@Õ@£@¥@¤@©`@mm@@£@¥@£@à[éÖ×ÅÕmÙÖÖãÆâaKKa©@¤£@£¨@nPò@@§£@ô@­@`@[ÈÖÔÅa©@½^@£@@@Z@©~[M@[ÈÖÔÅa©@òna¥a¤@PP@@[×æÄ]@^@£@@@@@Åz@[ÈÖÔÅa©@§¢£¢@¤£@¢@£@@¢¨@K@nPò@@@@§£@ô@@¢@@@@Z@@`¢@[éÖ×ÅÕmÙÖÖãÆâaKKa©@[ÈÖÔÅa©@^@£@@@@@Åz@ä@£@£@©@¢¨@@@@£¨K@nPò@@@@§£@ô@@@Z@@`@[ÈÖÔÅa©a\@^@£@@@Åz@ä@£@@¤@[ÈÖÔÅa©@@£K@nPò@@§£@ô@Z@©`£@`¨@[ÈÖÔÅa©@^@£@@@Åz@×£@£@[ÈÖÔÅa©@K@nPò@@§£@ô¦£§£~[Maa¢@¢zéÖ×ÅÕmÙÖÖãÆâ~à[ÈÖÔÅa©àzéÖ×ÅÕmÙÖÖãÆâ~àa¤¢aa©àz@[ÈÖÔÅa©a£a©`]@­@[o@`£@ð@½^@£@@@Åz@ä@£@¤£@éÖ×ÅÕmÙÖÖãÆâ@@£@£@©@@nPò@@§£@ô@Z@@[À¦£§£Ð@n[ÈÖÔÅa©a£a©`@^@£@@@Åz@ä@£@¤£@[ÈÖÔÅa©a£a©`@nPò@@§£@ô@Z@[ÔèÄÉÙa©£@^@£@@@Åz@ä@£@¨@¢@£@@¤£@nPò@@§£@ô@Z@[ÔèÄÉÙa¢¦©£@^@£@@@Åz@ä@£@¢¦@¤£@£@@¤@nPò@@§£@ô§£@ð
+#!/bin/sh
+
+#
+# upgradezot: upgrades the z/OS Open Tools from the callers $HOME/zot directory
+#   by performing the following steps (on a production system, this would be done manually)
+# 
+# ln -s $ZOPEN_ROOTFS/../zopenprod $HOME/zopenprod     # set up link from home/zopenprod to a 'zopenprod' location
+# zopen-promote -y $HOME/zopenprod                     # promote current build into 
+# run sed to change ZOPEN_ROTFS line to /usr/local/zopenprod
+# run cpzot to copy $HOME/zopenprod to offline production tree
+# run swapzot to swap offline production to online production under /usr/local/zopenprod
+#
+MYDIR="$(cd "$(dirname "$0")" > /dev/null 2>&1 && pwd -P)"
+
+ZOTROOT="${ZOPEN_ROOTFS}/../zopenprod"
+
+if ! [ -d "${ZOPEN_ROOTFS}" ] || ! [ -d "${ZOTROOT}" ]; then
+  echo "Error: Need to have run zopen-config _and_ need to have created \$ZOPEN_ROOTFS/../zopenprod production directory" >&2
+  exit 4
+fi
+
+if [ -e $HOME/zopenprod ]; then
+  if ! zopenprod=$(cd $HOME/zopenprod 2>/dev/null && echo $PWD) ; then
+    echo "Error: $HOME/zopenprod exists but is not a symbolic link." >&2
+    exit 4
+  fi
+else 
+  if ! ln -s $ZOPEN_ROOTFS/../zopenprod $HOME/zopenprod ; then
+    echo "Error: Unable to create zopenprod symbolic link from home directory." >&2
+    exit 4
+  fi
+fi
+
+if ! rm -rf $HOME/zopenprod/* ; then
+  echo "Error: Unable to clean up $HOME/zopenprod before promotion." >&2
+  exit 4
+fi
+
+if ! zopen-promote -y $HOME/zopenprod ; then
+  echo "Error: Promotion to $HOME/zopenprod failed." >&2
+  exit 4
+fi
+
+newtext=$(/bin/sed "s:ZOPEN_ROOTFS=\"$HOME/zopenprod\":ZOPEN_ROOTFS=\"/usr/local/zopenprod\":" "$HOME/zopenprod/etc/zopen-config")
+if [ $? -gt 0 ]; then
+  echo "Error: Unable to update ZOPEN_ROOTFS in the promoted zopenprod code" >&2
+  exit 4
+fi
+if ! echo "${newtext}" >"$HOME/zopenprod/etc/zopen-config" ; then
+  echo "Error: Unable to update $HOME/zopenprod/etc/zopen-config" >&2
+  exit 4
+fi
+
+if ! $MYDIR/cpzot ; then
+  echo "Error: Unable to copy files to offline production" >&2
+  exit 4
+fi
+
+if ! $MYDIR/swapzot ; then
+  echo "Error: Unable to swap production tree for upgrade" >&2
+  exit 4
+fi
+
+exit 0

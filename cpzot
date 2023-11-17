@@ -1,1 +1,73 @@
-{Zaa¢{{@©£z@¨@@¢@@¢¨¢£@£@£¥@£¨{éÆâÉÕâãÉÄ~}©¢¢£}ÃÁÓÓÅÙÈÖÔÅ~[ÈÖÔÅéÖãÙÖÖã~a©@Z@¢¤@`¥@^@£@@@}Åz@è¤@@£@@¤£©@£@¢¤@£@¤@£¢@}@nPò@@§£@ô¢¤¢£~[M¢¤@`]@­@[o@`£@ð@½^@£@@@}Åz@è¤@@£@@@£@¢£@¢@¨¤@@¤£©@£@¢¤}@nPò@@§£@ô{{@Ô@¢¤@£@ò@}}@@ò@}}@¢¤@¢@@¥{~¢@Z@@[À¢¤¢£Ð@O@@`@M[ÀéÆâÉÕâãÉÄÐ]@ÕÖ×ÁââæÄz@aa@`@[éÖãÙÖÖãaa©@^@£@@@Åz@è¤@@£@@@£@¢¤@`¤@[ÀéÆâÉÕâãÉÄÐ@aa@`@[éÖãÙÖÖãaa©@nPò@@~£¤@Z@@[À¢¤¢£Ð@O@@`@M[ÀéÆâÉÕâãÉÄÐ]@ÕÖ×ÁââæÄz@aa@`@[éÖãÙÖÖãaa©@^@£@@@Åz@è¤@@£@@@£@¢¤@`¤@[ÀéÆâÉÕâãÉÄÐ@aa@`@[éÖãÙÖÖãaa©@nPò@@~£¤@Z@@[À¢¤¢£Ð@O@@`@M[ÀéÆâÉÕâãÉÄÐ]@ÕÖ×ÁââæÄz@aa@`@[ÀÃÁÓÓÅÙÈÖÔÅÐa©@[éÖãÙÖÖãaa@^@£@@@Åz@è¤@@£@@@£@¢¤@`¤@[ÀéÆâÉÕâãÉÄÐ@aa@`@[ÀÃÁÓÓÅÙÈÖÔÅÐa©@[éÖãÙÖÖãaa@nPò@@~£¤@Z@@[À¢¤¢£Ð@O@@`@M[ÀéÆâÉÕâãÉÄÐ]@ÕÖ×ÁââæÄz@aa@`@[ÀÃÁÓÓÅÙÈÖÔÅÐa©@[éÖãÙÖÖãaa@^@£@@@Åz@è¤@@£@@@£@¢¤@`¤@[ÀéÆâÉÕâãÉÄÐ@aa@`@[ÀÃÁÓÓÅÙÈÖÔÅÐa©@[éÖãÙÖÖãaa@nPò@@~£¤@[^@£@@@Åz@¤¢@¥¢¤@£@@£¢@¥@@¤@¢@@£@¤¢@£@[ÃÁÓÓÅÙÈÖÔÅ@nPò@@§£@ô{{@Ä£@££@£¨@£@¨@£K@ã¢@¢@£@@m£m@¤£¨@@@[éÖãÙÖÖãa{@Z@££~[M@[éÖãÙÖÖãa@òna¥a¤@PP@@[×æÄ]@^@£@@@Åz@ä@£@£@[éÖãÙÖÖãa@£¨K@Ã¤£@¢@¥K@nPò@@§£@ô@­@§[À££Ð@~@§[ÀéÖãÙÖÖãÐa@½^@£@@££~[ÀéÖãÙÖÖãÐaa@­@§[À££Ð@~@§[ÀéÖãÙÖÖãÐa@½^@£@@££~[ÀéÖãÙÖÖãÐaa¢@@@Åz@¢¨@@@[ÀéÖãÙÖÖãÐa@¢@£@£@£@[ÀéÖãÙÖÖãÐa@@[ÀéÖãÙÖÖãÐa@nPò@@§£@ô@Z@¢¤@`¤@[ÀéÆâÉÕâãÉÄÐ@aa@`@[À££Ð©@^@£@@@Åz@}¢¤@`¤@[ÀéÆâÉÕâãÉÄÐ@aa@`@[À££Ð©}@K@ã¢@¢@£@§£K@nPò@@§£@ô@Z@¢¤@`¤@[ÀéÆâÉÕâãÉÄÐ@aa@`@[ÀÃÁÓÓÅÙÈÖÔÅÐa©@[À££Ð@^@£@@@Åz@}¢¤@`¤@[ÀéÆâÉÕâãÉÄÐ@aa@`@[ÀÃÁÓÓÅÙÈÖÔÅÐa©@[À££Ð}@K@ã¢@¢@£@§£K@nPò@@§£@ô§£@ð
+#!/bin/sh
+
+#
+# cpzot: copy from callers file system to inactive directory
+#
+
+ZFSINSTID='zfsinst'
+CALLERHOME=$HOME
+ZOTROOT="/zopenprod"
+
+if ! sudo -v ; then
+  echo 'Error: You need to be authorized to sudo to run this program' >&2
+  exit 4
+fi
+sudolist=$(sudo -l)
+if [ $? -gt 0 ]; then
+  echo 'Error: You need to be able to list commands you are authorized to sudo' >&2
+  exit 4
+fi
+
+#
+# Make sure the 2 'rm' and 2 'cp' sudo commands are available
+#
+err=false
+if ! echo "${sudolist}" | grep -q "(${ZFSINSTID}) NOPASSWD: /bin/rm -rf $ZOTROOT/locala/zopenprod" ; then
+  echo "Error: You need to be able to sudo -u ${ZFSINSTID} /bin/rm -rf $ZOTROOT/locala/zopenprod" >&2
+  err=true
+fi
+if ! echo "${sudolist}" | grep -q "(${ZFSINSTID}) NOPASSWD: /bin/rm -rf $ZOTROOT/localb/zopenprod" ; then
+  echo "Error: You need to be able to sudo -u ${ZFSINSTID} /bin/rm -rf $ZOTROOT/localb/zopenprod" >&2
+  err=true
+fi
+if ! echo "${sudolist}" | grep -q "(${ZFSINSTID}) NOPASSWD: /bin/cp -rf ${CALLERHOME}/zopenprod $ZOTROOT/locala/" ; then
+  echo "Error: You need to be able to sudo -u ${ZFSINSTID} /bin/cp -rf ${CALLERHOME}/zopenprod $ZOTROOT/locala/" >&2
+  err=true
+fi
+if ! echo "${sudolist}" | grep -q "(${ZFSINSTID}) NOPASSWD: /bin/cp -rf ${CALLERHOME}/zopenprod $ZOTROOT/localb/" ; then
+  echo "Error: You need to be able to sudo -u ${ZFSINSTID} /bin/cp -rf ${CALLERHOME}/zopenprod $ZOTROOT/localb/" >&2
+  err=true
+fi
+
+if $err; then
+  echo "Error: use visudo to add this privilege or run as a different user than $CALLERHOME" >&2
+  exit 4
+fi
+
+#
+# Determine target directory to copy to. This is the one _not_ currently linked from $ZOTROOT/local
+#
+if ! target=$(cd $ZOTROOT/local 2>/dev/null && echo $PWD) ; then
+  echo "Error: Unable to determine $ZOTROOT/local directory. Configuration is invalid." >&2
+  exit 4
+fi
+
+if [ "x${target}" = "x${ZOTROOT}/locala" ]; then
+  cptgt="${ZOTROOT}/localb/"
+elif [ "x${target}" = "x${ZOTROOT}/localb" ]; then
+  cptgt="${ZOTROOT}/locala/"
+else
+  echo "Error: symbolic link for ${ZOTROOT}/local does not point to ${ZOTROOT}/locala nor ${ZOTROOT}/localb" >&2
+  exit 4
+fi
+
+if ! sudo -u ${ZFSINSTID} /bin/rm -rf "${cptgt}zopenprod" ; then
+  echo "Error: 'sudo -u ${ZFSINSTID} /bin/rm -rf ${cptgt}zopenprod' failed. This is not expected." >&2
+  exit 4
+fi
+if ! sudo -u ${ZFSINSTID} /bin/cp -rf "${CALLERHOME}/zopenprod" "${cptgt}" ; then
+  echo "Error: 'sudo -u ${ZFSINSTID} /bin/cp -rf ${CALLERHOME}/zopenprod ${cptgt}' failed. This is not expected." >&2
+  exit 4
+fi
+
+exit 0
